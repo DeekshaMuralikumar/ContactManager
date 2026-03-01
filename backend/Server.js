@@ -11,15 +11,7 @@ const MONGO_URI = process.env.MONGO_URI;
 // Middleware
 // const cors = require("cors");
 
-const API_BASE = process.env.REACT_APP_API;
-
-await fetch(`${API_BASE}/api/contacts`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify(formData),
-});
+app.use(cors());
 
 app.use(express.json());
 

@@ -40,9 +40,11 @@ export default function ContactForm({ onSave, editingContact, onCancelEdit }) {
 
     setLoading(true);
     try {
+      const API_BASE = process.env.REACT_APP_API;
+
       const url = editingContact
-        ? `http://localhost:5000/api/contacts/${editingContact._id}`
-        : 'http://localhost:5000/api/contacts';
+        ? `${API_BASE}/api/contacts/${editingContact._id}`
+        : `${API_BASE}/api/contacts`;
       const method = editingContact ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

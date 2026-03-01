@@ -12,7 +12,9 @@ export default function ContactList({ contacts, onEdit, onDelete }) {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+      const API_BASE = process.env.REACT_APP_API;
+
+      const res = await fetch(`${API_BASE}/api/contacts/${id}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Delete failed');
