@@ -11,6 +11,11 @@ export default function App() {
 
   const API_BASE = process.env.REACT_APP_API;
 
+  //temp
+  const API_BASE = process.env.REACT_APP_API;
+  console.log("API_BASE:", API_BASE);
+  //temp
+
   useEffect(() => {
     fetchContacts();
   }, []);
