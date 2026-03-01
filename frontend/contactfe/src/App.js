@@ -9,16 +9,15 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
+  const API_BASE =
+    process.env.REACT_APP_API || 'http://localhost:5000';
+
   useEffect(() => {
     fetchContacts();
   }, []);
 
   useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = isModalOpen ? 'hidden' : 'auto';
     return () => {
       document.body.style.overflow = 'auto';
     };
@@ -26,7 +25,7 @@ export default function App() {
 
   const fetchContacts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/contacts');
+      const res = await fetch(`${API_BASE}/api/contacts`);
       if (!res.ok) throw new Error('Failed to load contacts');
       const data = await res.json();
       setContacts(data);
@@ -37,14 +36,18 @@ export default function App() {
 
   const handleSave = (saved, isUpdate) => {
     let updatedContacts;
+
     if (isUpdate) {
-      updatedContacts = contacts.map((c) => (c._id === saved._id ? saved : c));
+      updatedContacts = contacts.map((c) =>
+        c._id === saved._id ? saved : c
+      );
     } else {
       updatedContacts = [saved, ...contacts];
     }
 
-    // Sort alphabetically by name
-    updatedContacts.sort((a, b) => a.name.localeCompare(b.name));
+    updatedContacts.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
 
     setContacts(updatedContacts);
     setEditingContact(null);
@@ -55,11 +58,17 @@ export default function App() {
     setEditingContact(contact);
     setIsModalOpen(true);
   };
+
   const handleCancelEdit = () => {
     setEditingContact(null);
     setIsModalOpen(false);
   };
-  const handleDelete = (id) => setContacts((prev) => prev.filter((c) => c._id !== id));
+
+  const handleDelete = (id) => {
+    setContacts((prev) =>
+      prev.filter((c) => c._id !== id)
+    );
+  };
 
   return (
     <div className="app-container">
@@ -70,10 +79,15 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {fetchError && <div className="global-error">{fetchError}</div>}
+        {fetchError && (
+          <div className="global-error">{fetchError}</div>
+        )}
 
         <div className="list-actions">
-          <button className="btn btn-primary add-contact-btn" onClick={() => setIsModalOpen(true)}>
+          <button
+            className="btn btn-primary add-contact-btn"
+            onClick={() => setIsModalOpen(true)}
+          >
             <span className="icon">➕</span> Add Contact
           </button>
         </div>
@@ -89,7 +103,13 @@ export default function App() {
         {isModalOpen && (
           <div className="modal-overlay">
             <div className="modal-content">
-              <button className="modal-close" onClick={handleCancelEdit}>&times;</button>
+              <button
+                className="modal-close"
+                onClick={handleCancelEdit}
+              >
+                &times;
+              </button>
+
               <ContactForm
                 onSave={handleSave}
                 editingContact={editingContact}
