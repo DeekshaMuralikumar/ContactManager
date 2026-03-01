@@ -97,7 +97,6 @@ export default function ContactForm({ onSave, editingContact, onCancelEdit }) {
             placeholder="Mail Id"
             value={form.email}
             onChange={handleChange}
-          // required
           />
         </div>
 
