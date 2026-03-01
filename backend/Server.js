@@ -12,7 +12,7 @@ const MONGO_URI = process.env.MONGO_URI;
 // const cors = require("cors");
 
 app.use(cors({
-  origin: "https://your-frontend-name.onrender.com",
+  origin: "https://contactmanagerfe.onrender.com",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type"]
 }));
