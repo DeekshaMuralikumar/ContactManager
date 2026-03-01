@@ -11,12 +11,7 @@ const MONGO_URI = process.env.MONGO_URI;
 // Middleware
 // const cors = require("cors");
 
-app.use(cors({
-  origin: "https://contactmanagerfe.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"]
-}));
-
+app.use(cors());
 
 app.use(express.json());
 
