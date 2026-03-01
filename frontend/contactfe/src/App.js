@@ -9,8 +9,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
-  const API_BASE =
-    process.env.REACT_APP_API || 'http://localhost:5000';
+  const API_BASE = process.env.REACT_APP_API;
 
   useEffect(() => {
     fetchContacts();
