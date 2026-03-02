@@ -15,7 +15,7 @@ export default function App() {
 
   const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:5000'
-    : '';
+    : 'https://contactmanagerweb.onrender.com';
 
   useEffect(() => {
     if (user) fetchContacts();
@@ -87,7 +87,7 @@ export default function App() {
           <div className="modal-overlay">
             <div className="modal-content">
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</button>
-             
+
               <ContactForm
                 API_BASE={API_BASE}
                 onSave={handleSave}

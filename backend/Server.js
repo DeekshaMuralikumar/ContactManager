@@ -11,7 +11,8 @@ const Contact = require('./entity/Contact');
 
 const app = express();
 app.use(cors({
-  origin: 'https://contactmanagerfe.onrender.com'
+  origin: 'https://contactmanagerfe.onrender.com',
+  credentials: true
 }));
 app.use(express.json());
 
