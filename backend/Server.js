@@ -89,14 +89,4 @@ app.delete('/api/contacts/:id', async (req, res) => {
   }
 });
 
-// --- RENDER DEPLOYMENT SETTINGS ---
-// This serves the React frontend from the backend
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/build')));
-
-  app.get('/*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-  });
-}
-
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
