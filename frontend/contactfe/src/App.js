@@ -23,7 +23,8 @@ export default function App() {
 
   const fetchContacts = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/contacts`);
+      // ✅ Change: Use the user ID in the URL to fetch private data
+      const res = await fetch(`${API_BASE}/api/contacts/${user.id}`);
       if (!res.ok) throw new Error('Failed to load contacts');
       const data = await res.json();
       setContacts(data);
@@ -34,6 +35,7 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setContacts([]); // ✅ Clear contacts on logout for security
     localStorage.removeItem('token');
   };
 
@@ -63,7 +65,7 @@ export default function App() {
         <div className="header-inner">
           <h1>ContactManager</h1>
           <div className="user-info">
-            <span>Hi, {user.username.split('@')[0]}</span>
+            <span>Hi, <strong>{user.username.split('@')[0]}</strong></span>
             <button className="btn-logout" onClick={handleLogout}>Logout</button>
           </div>
         </div>
@@ -90,6 +92,7 @@ export default function App() {
 
               <ContactForm
                 API_BASE={API_BASE}
+                user={user}
                 onSave={handleSave}
                 editingContact={editingContact}
                 onCancelEdit={() => setIsModalOpen(false)}

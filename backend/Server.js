@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path'); // Added for deployment
 require('dotenv').config();
 
 const User = require('./entity/User');
@@ -45,16 +44,18 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, username: user.username });
+    // ✅ Send the user ID so the frontend can use it to fetch specific contacts
+    res.json({ token, username: user.username, id: user._id }); 
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
 // --- CONTACT ROUTES ---
-app.get('/api/contacts', async (req, res) => {
+// ✅ Filter by userId passed in the URL
+app.get('/api/contacts/:userId', async (req, res) => {
   try {
-    const contacts = await Contact.find().sort({ name: 1 });
+    const contacts = await Contact.find({ userId: req.params.userId }).sort({ name: 1 });
     res.json(contacts);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -63,11 +64,12 @@ app.get('/api/contacts', async (req, res) => {
 
 app.post('/api/contacts', async (req, res) => {
   try {
+    // Expects { name, mobile, email, userId } from Frontend
     const contact = new Contact(req.body);
     const saved = await contact.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ message: "Email must be unique" });
+    res.status(400).json({ message: "Error saving contact" });
   }
 });
 
