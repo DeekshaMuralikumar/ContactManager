@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ContactForm from './components/ContactForm';
 import ContactList from './components/ContactList';
+import Login from './components/Login';
+import Signup from './components/Signup';
 import './App.css';
 
 export default function App() {
@@ -8,19 +10,16 @@ export default function App() {
   const [editingContact, setEditingContact] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fetchError, setFetchError] = useState('');
+  const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState('login');
 
-  const API_BASE = process.env.REACT_APP_API;
+  const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:5000'
+    : '';
 
   useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = isModalOpen ? 'hidden' : 'auto';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isModalOpen]);
+    if (user) fetchContacts();
+  }, [user]);
 
   const fetchContacts = async () => {
     try {
@@ -33,86 +32,67 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+  };
+
   const handleSave = (saved, isUpdate) => {
-    let updatedContacts;
-
-    if (isUpdate) {
-      updatedContacts = contacts.map((c) =>
-        c._id === saved._id ? saved : c
-      );
-    } else {
-      updatedContacts = [saved, ...contacts];
-    }
-
-    updatedContacts.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-
-    setContacts(updatedContacts);
-    setEditingContact(null);
+    const updated = isUpdate
+      ? contacts.map(c => c._id === saved._id ? saved : c)
+      : [saved, ...contacts];
+    setContacts(updated.sort((a, b) => a.name.localeCompare(b.name)));
     setIsModalOpen(false);
-  };
-
-  const handleEdit = (contact) => {
-    setEditingContact(contact);
-    setIsModalOpen(true);
-  };
-
-  const handleCancelEdit = () => {
     setEditingContact(null);
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id) => {
-    setContacts((prev) =>
-      prev.filter((c) => c._id !== id)
+  if (!user) {
+    return (
+      <div className="auth-wrapper">
+        {authView === 'login' ?
+          <Login API_BASE={API_BASE} onLoginSuccess={setUser} onSwitch={() => setAuthView('signup')} /> :
+          <Signup API_BASE={API_BASE} onSwitch={() => setAuthView('login')} />
+        }
+      </div>
     );
-  };
+  }
 
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="header-inner">
           <h1>ContactManager</h1>
+          <div className="user-info">
+            <span>Hi, {user.username.split('@')[0]}</span>
+            <button className="btn-logout" onClick={handleLogout}>Logout</button>
+          </div>
         </div>
       </header>
-
       <main className="app-main">
-        {fetchError && (
-          <div className="global-error">{fetchError}</div>
-        )}
-
+        {fetchError && <p className="error-text">{fetchError}</p>}
         <div className="list-actions">
-          <button
-            className="btn btn-primary add-contact-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <span className="icon">➕</span> Add Contact
+          <button className="btn btn-primary add-contact-btn" onClick={() => { setEditingContact(null); setIsModalOpen(true); }}>
+            ➕ Add Contact
           </button>
         </div>
 
-        <section className="content">
-          <ContactList
-            contacts={contacts}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </section>
+        <ContactList
+          API_BASE={API_BASE}
+          contacts={contacts}
+          onEdit={(c) => { setEditingContact(c); setIsModalOpen(true); }}
+          onDelete={(id) => setContacts(contacts.filter(c => c._id !== id))}
+        />
 
         {isModalOpen && (
           <div className="modal-overlay">
             <div className="modal-content">
-              <button
-                className="modal-close"
-                onClick={handleCancelEdit}
-              >
-                &times;
-              </button>
-
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</button>
+             
               <ContactForm
+                API_BASE={API_BASE}
                 onSave={handleSave}
                 editingContact={editingContact}
-                onCancelEdit={handleCancelEdit}
+                onCancelEdit={() => setIsModalOpen(false)}
               />
             </div>
           </div>

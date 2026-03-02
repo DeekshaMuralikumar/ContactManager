@@ -1,27 +1,54 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path'); // Added for deployment
 require('dotenv').config();
+
+const User = require('./entity/User');
 const Contact = require('./entity/Contact');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-
-// Middleware
 app.use(cors());
-
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose
-  .connect(MONGO_URI)
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+
+mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch(err => console.error('Conn Error:', err));
 
-// ─── Routes ────────────────────────────────────────────────────────────────
+// --- AUTH ROUTES ---
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, password: hashed });
+    await newUser.save();
+    res.status(201).json({ message: "Signup successful!" });
+  } catch (err) {
+    res.status(400).json({ message: "Username already exists" });
+  }
+});
 
-// GET all contacts
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, username: user.username });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// --- CONTACT ROUTES ---
 app.get('/api/contacts', async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ name: 1 });
@@ -31,54 +58,42 @@ app.get('/api/contacts', async (req, res) => {
   }
 });
 
-// GET single contact
-app.get('/api/contacts/:id', async (req, res) => {
-  try {
-    const contact = await Contact.findById(req.params.id);
-    if (!contact) return res.status(404).json({ message: 'Contact not found' });
-    res.json(contact);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// POST create contact
 app.post('/api/contacts', async (req, res) => {
   try {
     const contact = new Contact(req.body);
     const saved = await contact.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ message: "Email must be unique" });
   }
 });
 
-// PUT update contact
 app.put('/api/contacts/:id', async (req, res) => {
   try {
-    const updated = await Contact.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!updated) return res.status(404).json({ message: 'Contact not found' });
+    const updated = await Contact.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updated);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// DELETE contact
 app.delete('/api/contacts/:id', async (req, res) => {
   try {
-    const deleted = await Contact.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'Contact not found' });
-    res.json({ message: 'Contact deleted successfully' });
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Start server
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// --- RENDER DEPLOYMENT SETTINGS ---
+// This serves the React frontend from the backend
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client/build')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+}
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
