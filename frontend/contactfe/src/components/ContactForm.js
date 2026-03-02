@@ -1,97 +1,95 @@
 import React, { useState, useEffect } from 'react';
 
-const initialState = { name: '', email: '', mobile: '' };
-
-// 1. Added API_BASE to props
-export default function ContactForm({ API_BASE, onSave, editingContact, onCancelEdit }) {
-  const [form, setForm] = useState(initialState);
-  const [loading, setLoading] = useState(false);
+export default function ContactForm({ API_BASE, user, onSave, editingContact, onCancelEdit }) {
+  const [form, setForm] = useState({ name: '', email: '', mobile: '' });
   const [error, setError] = useState('');
 
+  // When editing, fill the form with existing contact data
   useEffect(() => {
     if (editingContact) {
       setForm({
-        name: editingContact.name || '',
+        name: editingContact.name,
         email: editingContact.email || '',
-        mobile: editingContact.mobile || '',
+        mobile: editingContact.mobile
       });
     } else {
-      setForm(initialState);
+      setForm({ name: '', email: '', mobile: '' });
     }
   }, [editingContact]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.mobile.trim()) {
-      setError('Name, Email, and Mobile are required.');
-      return;
-    }
+    setError('');
+\
+    const payload = { 
+      ...form, 
+      userId: user.id  // This links the contact to the current account
+    };
 
-    const phoneRegex = /^\+\d+\s\d{10}$/;
-    if (!phoneRegex.test(form.mobile.trim())) {
-      setError('Mobile must be in format: +countrycode 10digits (e.g., +91 1234567890)');
-      return;
-    }
+    const url = editingContact 
+      ? `${API_BASE}/api/contacts/${editingContact._id}` 
+      : `${API_BASE}/api/contacts`;
+    
+    const method = editingContact ? 'PUT' : 'POST';
 
-    setLoading(true);
     try {
-      // 2. Use the prop API_BASE instead of process.env
-      const url = editingContact
-        ? `${API_BASE}/api/contacts/${editingContact._id}`
-        : `${API_BASE}/api/contacts`;
-      
-      const method = editingContact ? 'PUT' : 'POST';
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Something went wrong');
-      }
+      const data = await res.json();
 
-      const saved = await res.json();
-      onSave(saved, !!editingContact);
-      setForm(initialState);
+      if (res.ok) {
+        onSave(data, !!editingContact);
+        setForm({ name: '', email: '', mobile: '' });
+      } else {
+        setError(data.message || 'Save failed');
+      }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError('Server connection failed');
     }
   };
 
   return (
-    <div className="contact-form-card">
-      <h2>{editingContact ? 'Edit Contact' : 'Add New Contact'}</h2>
-      {error && <div className="form-error">{error}</div>}
-      <form onSubmit={handleSubmit} noValidate>
+    <div className="contact-form">
+      <h3>{editingContact ? 'Edit Contact' : 'New Contact'}</h3>
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Full Name</label>
-          <input id="name" name="name" type="text" placeholder="Name" value={form.name} onChange={handleChange} required />
+          <input
+            type="text"
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="Mail Id" value={form.email} onChange={handleChange} />
+          <input
+            type="email"
+            placeholder="Email (Optional)"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="mobile">Mobile Number</label>
-          <input id="mobile" name="mobile" type="tel" placeholder="+91 1234567890" value={form.mobile} onChange={handleChange} required />
+          <input
+            type="text"
+            placeholder="Mobile Number"
+            value={form.mobile}
+            onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+            required
+          />
         </div>
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Saving…' : editingContact ? 'Update' : 'Add Contact'}
+        {error && <p className="error-text">{error}</p>}
+        <div className="form-buttons">
+          <button type="submit" className="btn btn-primary">
+            {editingContact ? 'Update' : 'Save'}
           </button>
-          {editingContact && (
-            <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>Cancel</button>
-          )}
+          <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>
+            Cancel
+          </button>
         </div>
       </form>
     </div>
