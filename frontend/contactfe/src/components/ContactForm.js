@@ -4,7 +4,6 @@ export default function ContactForm({ API_BASE, user, onSave, editingContact, on
   const [form, setForm] = useState({ name: '', email: '', mobile: '' });
   const [error, setError] = useState('');
 
-  // When editing, fill the form with existing contact data
   useEffect(() => {
     if (editingContact) {
       setForm({
@@ -20,16 +19,17 @@ export default function ContactForm({ API_BASE, user, onSave, editingContact, on
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-\
-    const payload = { 
-      ...form, 
-      userId: user.id  // This links the contact to the current account
+    
+    // ✅ Fixed: Removed the stray backslash that was here
+    const payload = {
+      ...form,
+      userId: user.id 
     };
 
-    const url = editingContact 
-      ? `${API_BASE}/api/contacts/${editingContact._id}` 
+    const url = editingContact
+      ? `${API_BASE}/api/contacts/${editingContact._id}`
       : `${API_BASE}/api/contacts`;
-    
+
     const method = editingContact ? 'PUT' : 'POST';
 
     try {
@@ -50,7 +50,7 @@ export default function ContactForm({ API_BASE, user, onSave, editingContact, on
     } catch (err) {
       setError('Server connection failed');
     }
-  };
+  }; // ✅ Fixed: Ensure the function closes here
 
   return (
     <div className="contact-form">
