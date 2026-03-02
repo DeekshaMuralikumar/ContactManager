@@ -20,11 +20,8 @@ export default function ContactForm({ API_BASE, user, onSave, editingContact, on
     e.preventDefault();
     setError('');
     
-    // ✅ Fixed: Removed the stray backslash that was here
-    const payload = {
-      ...form,
-      userId: user.id 
-    };
+    // ✅ Attach user.id to the contact
+    const payload = { ...form, userId: user.id };
 
     const url = editingContact
       ? `${API_BASE}/api/contacts/${editingContact._id}`
@@ -43,54 +40,24 @@ export default function ContactForm({ API_BASE, user, onSave, editingContact, on
 
       if (res.ok) {
         onSave(data, !!editingContact);
-        setForm({ name: '', email: '', mobile: '' });
       } else {
         setError(data.message || 'Save failed');
       }
     } catch (err) {
       setError('Server connection failed');
     }
-  }; // ✅ Fixed: Ensure the function closes here
+  };
 
   return (
     <div className="contact-form">
       <h3>{editingContact ? 'Edit Contact' : 'New Contact'}</h3>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="email"
-            placeholder="Email (Optional)"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Mobile Number"
-            value={form.mobile}
-            onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-            required
-          />
-        </div>
+        <input type="text" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+        <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <input type="text" placeholder="Mobile" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} required />
         {error && <p className="error-text">{error}</p>}
-        <div className="form-buttons">
-          <button type="submit" className="btn btn-primary">
-            {editingContact ? 'Update' : 'Save'}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>
-            Cancel
-          </button>
-        </div>
+        <button type="submit" className="btn btn-primary">{editingContact ? 'Update' : 'Save'}</button>
+        <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>Cancel</button>
       </form>
     </div>
   );

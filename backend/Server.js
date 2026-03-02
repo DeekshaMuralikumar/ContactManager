@@ -64,7 +64,6 @@ app.get('/api/contacts/:userId', async (req, res) => {
 
 app.post('/api/contacts', async (req, res) => {
   try {
-    // Expects { name, mobile, email, userId } from Frontend
     const contact = new Contact(req.body);
     const saved = await contact.save();
     res.status(201).json(saved);

@@ -17,13 +17,21 @@ export default function App() {
     ? 'http://localhost:5000'
     : 'https://contactmanagerweb.onrender.com';
 
+  // 🟢 PERSISTENCE: Check for saved user on startup
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   useEffect(() => {
     if (user) fetchContacts();
   }, [user]);
 
   const fetchContacts = async () => {
     try {
-      // ✅ Change: Use the user ID in the URL to fetch private data
+      // ✅ Use user.id to fetch private data
       const res = await fetch(`${API_BASE}/api/contacts/${user.id}`);
       if (!res.ok) throw new Error('Failed to load contacts');
       const data = await res.json();
@@ -35,8 +43,9 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
-    setContacts([]); // ✅ Clear contacts on logout for security
+    setContacts([]);
     localStorage.removeItem('token');
+    localStorage.removeItem('user'); // 🟢 Clean up the "Application" drawer
   };
 
   const handleSave = (saved, isUpdate) => {
@@ -89,7 +98,6 @@ export default function App() {
           <div className="modal-overlay">
             <div className="modal-content">
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</button>
-
               <ContactForm
                 API_BASE={API_BASE}
                 user={user}

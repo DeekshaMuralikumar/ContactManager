@@ -13,8 +13,16 @@ const Login = ({ API_BASE, onLoginSuccess, onSwitch }) => {
         body: JSON.stringify(creds),
       });
       const data = await res.json();
-      if (res.ok) onLoginSuccess(data);
-      else setError(data.message);
+      
+      if (res.ok) {
+        // 🟢 STORAGE: This makes the token appear in the Application tab
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data)); 
+        
+        onLoginSuccess(data);
+      } else {
+        setError(data.message);
+      }
     } catch (err) { setError("Server error"); }
   };
 
